@@ -5,13 +5,13 @@ defmodule Leaky do
   require Logger
 
   def demo() do
-    Enum.each(1..1_000, fn(_i) ->
-      run_os_cmd("sleep 2 && ls")
+    Enum.each(1..1_000, fn _i ->
+      run_os_cmd("sleep 2")
     end)
   end
 
   def run_os_cmd(cmd) do
-    spawn fn ->
+    spawn(fn ->
       :exec.run(cmd, [:stdin, :stdout, :stderr, :monitor])
 
       receive do
@@ -19,15 +19,14 @@ defmodule Leaky do
           Logger.info("#{result}")
 
         {:DOWN, _os_pid, :process, _port, reason} ->
-          Logger.info("Finished #{inspect cmd} with reason: #{inspect reason}")
+          Logger.info("Finished #{inspect(cmd)} with reason: #{inspect(reason)}")
 
-
-        ret ->
-          IO.inspect ret
+        other ->
+          Logger.warn("Unmatched reply: #{inspect(other)}")
       after
         60_000 ->
-          Logger.error("Timeout calling: #{inspect cmd}")
+          Logger.error("Timeout calling: #{inspect(cmd)}")
       end
-    end
+    end)
   end
 end
